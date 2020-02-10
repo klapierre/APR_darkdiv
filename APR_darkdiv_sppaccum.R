@@ -6,6 +6,7 @@
 ################################################################################
 
 library(codyn)
+library(vegan)
 library(tidyverse)
 
 theme_set(theme_bw())
@@ -73,6 +74,23 @@ ggplot(data=barGraphStats(data=provenance, variable="cover", byFactorNames=c("ma
 
 
 
+###functional group
+growthForm <- relCover%>%
+  filter(provenance!='')%>% #filter out unknown species
+  group_by(management, APR_plot_id, growth_form)%>%
+  summarise(cover=sum(rel_cover))%>%
+  ungroup()
+
+#figure - percent native cover
+ggplot(data=barGraphStats(data=growthForm, variable="cover", byFactorNames=c("management", "growth_form")), aes(x=management, y=mean, fill=growth_form)) +
+  geom_bar(stat='identity', position=position_dodge()) +
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=0.2, position=position_dodge(0.9)) +
+  # scale_fill_manual(values=c("#FF9900", "#009900")) +
+  ylab('Relative Percent Cover') + xlab('Management')
+#export at 600x600
+
+
+
 ###species richness, evenness
 management <- relCover%>%
   select(management, APR_plot_id)%>%
@@ -96,9 +114,30 @@ ggplot(data=barGraphStats(data=communityStructure, variable="Evar", byFactorName
 #export at 400x600
 
 
-# TODO - all by bison vs cattle
-# percent native vs introduced
-# diversity by native vs introduced
-# species accumulation curves
-# NMDS
+
+###community differences
+#make matrix
+sppMatrix <- relCover%>%
+  select(location, APR_plot_id, genus_species, rel_cover)%>%
+  spread(key=genus_species, value=rel_cover, fill=0)
+
+sppBC <- metaMDS(sppMatrix[,3:85])
+
+plots <- 1:nrow(sppMatrix)
+plotData <- sppMatrix[,1:2]
+plot(sppBC$points,col=as.factor(plotData$location))
+ordiellipse(sppBC, groups = as.factor(plotData$Watershed), kind = "sd", display = "plots", label = T)
+
+#Use the vegan ellipse function to make ellipses           
+veganCovEllipse<-function (cov, center = c(0, 0), scale = 1, npoints = 100)
+{
+  theta <- (0:npoints) * 2 * pi/npoints
+  Circle <- cbind(cos(theta), sin(theta))
+  t(center + scale * t(Circle %*% chol(cov)))
+}
+
+BC_NMDS = data.frame(MDS1 = sppBC$points[,1], MDS2 = sppBC$points[,2],group=plotData$location)
+BC_NMDS_Graph <- cbind(plotData,BC_NMDS)
+BC_Ord_Ellipses<-ordiellipse(sppBC, plotData$location, display = "sites",
+                             kind = "se", conf = 0.95, label = T)               
 
