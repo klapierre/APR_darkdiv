@@ -141,3 +141,9 @@ BC_NMDS_Graph <- cbind(plotData,BC_NMDS)
 BC_Ord_Ellipses<-ordiellipse(sppBC, plotData$location, display = "sites",
                              kind = "se", conf = 0.95, label = T)               
 
+
+
+
+
+test
+
