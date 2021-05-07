@@ -37,6 +37,7 @@ barGraphStats <- function(data, variable, byFactorNames) {
 
 setwd('C:\\Users\\komatsuk\\Dropbox (Smithsonian)\\American Prairie Reserve\\APR_darkdiv') #desktop
 setwd('C:\\Users\\lapie\\Dropbox (Smithsonian)\\American Prairie Reserve\\APR_darkdiv') #laptop
+setwd("~/Dropbox (Smithsonian)/APR_darkdiv") #shelley
 
 ###read in data
 spp <- read.csv('DarkDivNet_Species_Comp_Traits_2019_forAnalysis.csv')%>%
@@ -72,6 +73,17 @@ ggplot(data=barGraphStats(data=provenance, variable="cover", byFactorNames=c("ma
   ylab('Relative Percent Cover') + xlab('Management')
 #export at 600x600
 
+#making means and sds dataframe
+provenance_means <- provenance %>%
+  group_by(management, provenance) %>%
+  summarise(mean_cover=mean(cover), sd_cover=sd(cover), length_cover=length(cover)) %>%
+  ungroup() %>%
+  mutate(se_cover=sd_cover/sqrt(length_cover))
+
+#plotting percent native cover with our new means/sds dataframe
+ggplot(data=provenance_means, aes(x=management, y=mean_cover, fill=provenance))+
+  geom_bar(stat='identity', position=position_dodge())+
+  geom_errorbar(aes(ymin=mean_cover-se_cover, ymax= mean_cover+se_cover), width=0.2, position=position_dodge(0.9))
 
 
 ###functional group
