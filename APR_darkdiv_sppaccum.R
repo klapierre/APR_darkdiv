@@ -38,6 +38,7 @@ barGraphStats <- function(data, variable, byFactorNames) {
 setwd('C:\\Users\\komatsuk\\Dropbox (Smithsonian)\\American Prairie Reserve\\APR_darkdiv') #desktop
 setwd('C:\\Users\\lapie\\Dropbox (Smithsonian)\\American Prairie Reserve\\APR_darkdiv') #laptop
 setwd("~/Dropbox (Smithsonian)/APR_darkdiv") #shelley
+setwd("C:\\Users\\Airsi\\OneDrive\\Documents\\SERC\\APR_darkdivskye\\APR_darkdiv") #skye's desktop
 
 ###read in data
 spp <- read.csv('DarkDivNet_Species_Comp_Traits_2019_forAnalysis.csv')%>%
