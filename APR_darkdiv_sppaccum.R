@@ -39,7 +39,8 @@ setwd('C:\\Users\\komatsuk\\Dropbox (Smithsonian)\\American Prairie Reserve\\APR
 setwd('C:\\Users\\lapie\\Dropbox (Smithsonian)\\American Prairie Reserve\\APR_darkdiv') #laptop
 setwd("~/Dropbox (Smithsonian)/APR_darkdiv") #shelley
 setwd("~/Documents/r_stuff/APR_darkdiv") #skye's mac
-
+setwd("C:/Users/hrusk/Dropbox (Smithsonian)/APR_darkdiv") #amy's laptop
+ 
 ###read in data
 spp <- read.csv('DarkDivNet_Species_Comp_Traits_2019_forAnalysis.csv')%>%
   mutate(management=ifelse(location=='BLM', 'cattle', 'bison'))
@@ -98,7 +99,7 @@ growthForm <- relCover%>%
 ggplot(data=barGraphStats(data=growthForm, variable="cover", byFactorNames=c("management", "growth_form")), aes(x=management, y=mean, fill=growth_form)) +
   geom_bar(stat='identity', position=position_dodge()) +
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=0.2, position=position_dodge(0.9)) +
-  # scale_fill_manual(values=c("#FF9900", "#009900")) +
+  #scale_fill_manual(values=c("#FF9900", "#009900")) + ##need 2 more values##
   ylab('Relative Percent Cover') + xlab('Management')
 #export at 600x600
 
