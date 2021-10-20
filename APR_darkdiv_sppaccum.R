@@ -10,11 +10,11 @@ library(vegan)
 library(tidyverse)
 
 theme_set(theme_bw())
-theme_update(axis.title.x=element_text(size=20, vjust=-0.35), axis.text.x=element_text(size=16),
-             axis.title.y=element_text(size=20, angle=90, vjust=0.5), axis.text.y=element_text(size=16),
+theme_update(axis.title.x=element_text(size=24, vjust=-0.35), axis.text.x=element_text(size=20, color = "black"),
+             axis.title.y=element_text(size=24, angle=90, vjust=0.7), axis.text.y=element_text(size=20, color= "black"),
              plot.title = element_text(size=24, vjust=2),
              panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-             legend.title=element_blank(), legend.text=element_text(size=15))
+             legend.title=element_blank(), legend.text=element_text(size=18), panel.border=element_rect(color="black", fill = NA, size = 1)) #axis.line=element_line(color="black")
 
 ###bar graph summary statistics function
 #barGraphStats(data=, variable="", byFactorNames=c(""))
@@ -71,9 +71,33 @@ provenance <- relCover%>%
 ggplot(data=barGraphStats(data=provenance, variable="cover", byFactorNames=c("management", "provenance")), aes(x=management, y=mean, fill=provenance)) +
   geom_bar(stat='identity', position=position_dodge()) +
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=0.2, position=position_dodge(0.9)) +
-  scale_fill_manual(values=c("#FF9900", "#009900")) +
-  ylab('Relative Percent Cover') + xlab('Management')
+  scale_fill_manual(values=c("grey40", "grey"), labels=c("Non-native", "Native")) +
+  ylab('Relative Percent Cover')+ xlab(element_blank())+
+  expand_limits(y=80)+
+  theme(legend.position=c(0.21,0.9))+
+  scale_x_discrete(labels = c("Bison", "Cattle"))
 #export at 600x600
+
+#anova for percent cover
+anova1 <- aov(cover~management*provenance, data = provenance)
+summary(anova1)
+
+nativecover <- provenance %>%
+  filter(provenance == "native")
+
+nonnativecover <- provenance %>%
+  filter(provenance == "introduced")
+
+anova2 <- aov(cover~management, data = nativecover)
+summary(anova2)
+
+anova3 <- aov(cover~management, data = nonnativecover)
+summary(anova3)
+
+#anova3 <- aov(cover~management, data = subset(provenance, provenance == "introduced"))
+
+
+
 
 #making means and sds dataframe
 provenance_means <- provenance %>%
