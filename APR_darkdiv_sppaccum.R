@@ -41,6 +41,7 @@ setwd("~/Dropbox (Smithsonian)/APR_darkdiv") #shelley
 setwd("~/Documents/r_stuff/APR_darkdiv") #skye's mac
 setwd("C:/Users/hrusk/Dropbox (Smithsonian)/APR_darkdiv") #amy's laptop
 setwd("C:/Users/Sarah Alley/Dropbox (Smithsonian)/APR_darkdiv") #Sarah's laptop
+setwd("~/Dropbox (University of Michigan)/APR_darkdiv") #eb mac
 
  
 ###read in data
