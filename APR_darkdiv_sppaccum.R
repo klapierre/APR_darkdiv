@@ -40,6 +40,8 @@ setwd('C:\\Users\\lapie\\Dropbox (Smithsonian)\\American Prairie Reserve\\APR_da
 setwd("~/Dropbox (Smithsonian)/APR_darkdiv") #shelley
 setwd("~/Documents/r_stuff/APR_darkdiv") #skye's mac
 setwd("C:/Users/hrusk/Dropbox (Smithsonian)/APR_darkdiv") #amy's laptop
+setwd("C:/Users/Sarah Alley/Dropbox (Smithsonian)/APR_darkdiv") #Sarah's laptop
+
  
 ###read in data
 spp <- read.csv('DarkDivNet_Species_Comp_Traits_2019_forAnalysis.csv')%>%
@@ -72,44 +74,22 @@ ggplot(data=barGraphStats(data=provenance, variable="cover", byFactorNames=c("ma
   geom_bar(stat='identity', position=position_dodge()) +
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=0.2, position=position_dodge(0.9)) +
   scale_fill_manual(values=c("grey40", "grey"), labels=c("Non-native", "Native")) +
-  ylab('Relative Percent Cover')+ xlab(element_blank())+
+  ylab('Relative Percent Cover\n')+ xlab(element_blank())+
   expand_limits(y=80)+
-  theme(legend.position=c(0.21,0.9))+
-  scale_x_discrete(labels = c("Bison", "Cattle"))
+  theme(legend.position=c(0.21,.93), axis.text.x=element_text(size=24, color = "black"))+
+  scale_x_discrete(labels = c("Bison", "Cattle"))+
+  annotate("text", x= 2.23, y = 82, label= "a", size = 7)+ 
+  annotate("text", x= 1.77, y = 45, label= "b", size = 7)+
+  annotate("text", x= 0.77, y = 68, label= "ab", size = 7)+
+  annotate("text", x= 1.23, y = 60, label= "ab", size = 7)
 #export at 600x600
 
 #anova for percent cover
 anova1 <- aov(cover~management*provenance, data = provenance)
 summary(anova1)
-
-nativecover <- provenance %>%
-  filter(provenance == "native")
-
-nonnativecover <- provenance %>%
-  filter(provenance == "introduced")
-
-anova2 <- aov(cover~management, data = nativecover)
-summary(anova2)
-
-anova3 <- aov(cover~management, data = nonnativecover)
-summary(anova3)
-
-#anova3 <- aov(cover~management, data = subset(provenance, provenance == "introduced"))
-
-
-
-
-#making means and sds dataframe
-provenance_means <- provenance %>%
-  group_by(management, provenance) %>%
-  summarise(mean_cover=mean(cover), sd_cover=sd(cover), length_cover=length(cover)) %>%
-  ungroup() %>%
-  mutate(se_cover=sd_cover/sqrt(length_cover))
-
-#plotting percent native cover with our new means/sds dataframe
-ggplot(data=provenance_means, aes(x=management, y=mean_cover, fill=provenance))+
-  geom_bar(stat='identity', position=position_dodge())+
-  geom_errorbar(aes(ymin=mean_cover-se_cover, ymax= mean_cover+se_cover), width=0.2, position=position_dodge(0.9))
+#Effect of management depends on effect of species (native or non-native), only the interaction was significant (P value = .00706, F 1,36 = 8.163)
+anova1posthoc <- TukeyHSD(anova1)
+#a above cattle non-native, b above cattle native, ab above bison bars (or the other way)
 
 
 ###functional group
@@ -126,6 +106,7 @@ ggplot(data=barGraphStats(data=growthForm, variable="cover", byFactorNames=c("ma
   #scale_fill_manual(values=c("#FF9900", "#009900")) + ##need 2 more values##
   ylab('Relative Percent Cover') + xlab('Management')
 #export at 600x600
+
 
 
 
