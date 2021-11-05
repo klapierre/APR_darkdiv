@@ -88,7 +88,7 @@ ggplot(data=barGraphStats(data=provenance, variable="cover", byFactorNames=c("ma
 #anova for percent cover
 anova1 <- aov(cover~management*provenance, data = provenance)
 summary(anova1)
-#Effect of management depends on effect of species (native or non-native), only the interaction was significant (P value = .00706, F 1,36 = 8.163)
+#Effect of management depends on effect of species (native or non-native), only the interaction was significant (P value = .00706, F (1,36) = 8.163)
 anova1posthoc <- TukeyHSD(anova1)
 #a above cattle non-native, b above cattle native, ab above bison bars (or the other way)
 
@@ -100,16 +100,30 @@ growthForm <- relCover%>%
   summarise(cover=sum(rel_cover))%>%
   ungroup()
 
+
 #figure - percent native cover
-ggplot(data=barGraphStats(data=growthForm, variable="cover", byFactorNames=c("management", "growth_form")), aes(x=management, y=mean, fill=growth_form)) +
+ggplot(data=barGraphStats(data=growthForm, variable="cover", byFactorNames=c("management", "growth_form")), aes(x=growth_form, y=mean, fill=management)) +
   geom_bar(stat='identity', position=position_dodge()) +
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=0.2, position=position_dodge(0.9)) +
-  #scale_fill_manual(values=c("#FF9900", "#009900")) + ##need 2 more values##
-  ylab('Relative Percent Cover') + xlab('Management')
-#export at 600x600
+  ylab('Relative Percent Cover\n') + xlab("")+
+  scale_fill_manual(values=c("grey40", "grey"), labels=c("Bison", "Cattle"))+
+  theme(axis.text.x=element_text(angle=45, hjust=1))+
+  scale_x_discrete(limits = c("graminoid", "forb", "woody", "succulent"),breaks= c("graminoid", "forb", "woody", "succulent"),labels = c("Graminoid", "Forb", "Woody", "Succulent"))+
+  theme(legend.position=c(.8,.9), axis.text.x=element_text(size=24, color = "black"))+
+  expand_limits(y=80)
+  #export at 600x600
 
+anovafunctionalgroup <- aov(cover~management*growth_form, data = growthForm)
+summary(anovafunctionalgroup)
+#Growth form alone (P value = <.001, F(3, 71)= 79.732 and growth form's interaction with management (P value = 0.015, F(3, 71) = 3.731) are significant
 
+anovafunctionalgroupposthoc <- TukeyHSD(anovafunctionalgroup)
+#a for bison graminoid, cattle graminoid 
+#b for bison forb, cattle woody
+#c for bison succulent, cattle succulent 
+#bc for cattle forb, bison woody 
 
+#This is where we left off on 11/5/21
 
 ###species richness, evenness
 management <- relCover%>%
