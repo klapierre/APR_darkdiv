@@ -111,9 +111,17 @@ ggplot(data=barGraphStats(data=growthForm, variable="cover", byFactorNames=c("ma
   scale_fill_manual(values=c("grey40", "grey"), labels=c("Bison", "Cattle"))+
   theme(axis.text.x=element_text(angle=45, hjust=1))+
   scale_x_discrete(limits = c("graminoid", "forb", "woody", "succulent"),breaks= c("graminoid", "forb", "woody", "succulent"),labels = c("Graminoid", "Forb", "Woody", "Succulent"))+
-  theme(legend.position=c(.8,.9), axis.text.x=element_text(size=24, color = "black"))+
-  expand_limits(y=80)
-  #export at 600x600
+  theme(legend.position=c(.87,.9), axis.text.x=element_text(size=24, color = "black"))+
+  expand_limits(y=80) +
+  annotate("text", x= .77, y = 73, label= "a", size = 7)+ #gram bison
+  annotate("text", x= 1.23, y = 75, label= "a", size = 7)+ #gram cattle
+  annotate("text", x= 1.77, y = 40, label= "b", size = 7)+ #forb bison
+  annotate("text", x= 2.23, y = 20, label= "bc", size = 7)+ #forb cattle
+  annotate("text", x= 2.77, y = 20, label= "bc", size = 7)+ #woody bison
+  annotate("text", x= 3.23, y = 32, label= "b", size = 7)+ #woody cattle
+  annotate("text", x= 3.77, y = 6, label= "c", size = 7)+ #succ bison
+  annotate("text", x= 4.23, y = 8, label= "c", size = 7) #succ cattle
+#export at 600x600
 
 anovafunctionalgroup <- aov(cover~management*growth_form, data = growthForm)
 summary(anovafunctionalgroup)
@@ -132,6 +140,7 @@ management <- relCover%>%
   select(management, APR_plot_id)%>%
   unique()
 
+
 communityStructure <- community_structure(relCover, time.var=NULL, abundance.var='rel_cover', replicate.var='APR_plot_id')%>%
   left_join(management)
 
@@ -139,8 +148,43 @@ communityStructure <- community_structure(relCover, time.var=NULL, abundance.var
 ggplot(data=barGraphStats(data=communityStructure, variable="richness", byFactorNames=c("management")), aes(x=management, y=mean)) +
   geom_bar(stat='identity', position=position_dodge()) +
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=0.2, position=position_dodge(0.9)) +
-  ylab('Plant Species Richness') + xlab('Management')
+  ylab('Plant Species Richness\n') + xlab("") + expand_limits(y=40) +
+  theme(axis.text.x=element_text(size=24, color = "black")) +
+  scale_x_discrete(labels = c("Bison", "Cattle"))+
+  annotate("text", x= 1, y = 33, label= "a", size = 7)+ #bison
+  annotate("text", x= 2, y = 37, label= "b", size = 7) #cattle
 #export at 400x600
+
+##Richness t-test
+richnessttest <- t.test(communityStructure$richness ~ communityStructure$management)
+richnessttest
+#t = -2.2123, df = 16.294, p-value = 0.04155
+#mean bison: 28.2 
+#mean cattle: 32.6 
+
+#Richness by Provenance
+
+provmanagment <- relCover%>%
+  filter(provenance== "introduced"|provenance == "native")%>%
+  select(management, APR_plot_id, provenance)%>%
+  unique()
+
+communityStructureprov <- provmanagement %>%
+  group_by(APR_plot_id, provenance)%>%
+  community_structure(relCover, time.var=NULL, abundance.var='rel_cover', replicate.var= 'APR_plot_id')
+
+
+##idkman
+Richnesses<-relCover%>%
+  group_by(APR_plot_id,provenance)%>%
+  mutate(richness=(count=unique(genus_species)))%>%
+  group_by(APR_plot_id,provenance)%>%
+  community_structure(time.var=NULL,abundance.var="rel_cover",replicate.var="APR_plot_id")
+
+
+#anova richness and provenance
+anovarichprov <- aov(richness~management*provenance, data = provmanagment)
+
 
 #figure - evenness
 ggplot(data=barGraphStats(data=communityStructure, variable="Evar", byFactorNames=c("management")), aes(x=management, y=mean)) +
