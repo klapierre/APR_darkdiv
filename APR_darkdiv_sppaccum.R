@@ -5,6 +5,10 @@
 ##  Date created: February 5, 2020
 ################################################################################
 
+
+##For loading your GIT auth token### library(gitcreds) then gitcreds::gitcreds_set()
+
+
 library(codyn)
 library(vegan)
 library(tidyverse)
@@ -174,7 +178,7 @@ communityStructureprov <- provmanagement %>%
   community_structure(relCover, time.var=NULL, abundance.var='rel_cover', replicate.var= 'APR_plot_id')
 
 
-##idkman
+##Richness and Provenance pt2
 Richnesses<-relCover%>%
   group_by(APR_plot_id,provenance)%>%
   mutate(richness=(count=unique(genus_species)))%>%
@@ -190,10 +194,17 @@ anovarichprov <- aov(richness~management*provenance, data = provmanagment)
 ggplot(data=barGraphStats(data=communityStructure, variable="Evar", byFactorNames=c("management")), aes(x=management, y=mean)) +
   geom_bar(stat='identity', position=position_dodge()) +
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=0.2, position=position_dodge(0.9)) +
-  ylab('Plant Species Evenness') + xlab('Management')
+  ylab('Plant Species Evenness\n') + xlab('') +  theme(axis.text.x=element_text(size=24, color = "black")) + expand_limits(y=.085) +
+  scale_x_discrete(labels = c("Bison", "Cattle"))
 #export at 400x600
 
 
+#T-test for eveness 
+evenessttest <- t.test(communityStructure$Evar ~ communityStructure$management)
+evenessttest
+#t = -1.5805, df = 12.847, p-value = 0.1383
+#Bison mean: 0.06226895 
+#Cattle mean:0.07236698 
 
 ###community differences
 #make matrix
