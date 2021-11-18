@@ -166,28 +166,56 @@ richnessttest
 #mean bison: 28.2 
 #mean cattle: 32.6 
 
-#Richness by Provenance
+### AY & KB figured out how to separate richness by provenance and ran the stats and made figure 
+#Richness by Provenance and Management
+relCoverProv <- spp10%>%
+  left_join(totCover) %>%
+  filter(provenance== "introduced"|provenance == "native") %>%
+  mutate(ID_provenance = paste(APR_plot_id,provenance,sep="-")) %>%
+  mutate(rel_cover=100*(cover/total_cover))
 
-provmanagment <- relCover%>%
-  filter(provenance== "introduced"|provenance == "native")%>%
-  select(management, APR_plot_id, provenance)%>%
+provmanagment <- relCoverProv%>%
+  select(ID_provenance,management)%>%
   unique()
 
-communityStructureprov <- provmanagement %>%
-  group_by(APR_plot_id, provenance)%>%
-  community_structure(relCover, time.var=NULL, abundance.var='rel_cover', replicate.var= 'APR_plot_id')
+communityStructureprov<-community_structure(relCoverProv, time.var=NULL, abundance.var='rel_cover', 
+  replicate.var= 'ID_provenance') %>%
+  left_join(provmanagment) %>%
+  separate(ID_provenance,c("APR_plot_id","provenance"),sep="-")
 
 
-##Richness and Provenance pt2
-Richnesses<-relCover%>%
-  group_by(APR_plot_id,provenance)%>%
-  mutate(richness=(count=unique(genus_species)))%>%
-  group_by(APR_plot_id,provenance)%>%
-  community_structure(time.var=NULL,abundance.var="rel_cover",replicate.var="APR_plot_id")
+
+#figure - richness, management, and provenance
+ggplot(data=barGraphStats(data=communityStructureprov, variable="richness", byFactorNames=c("management","provenance")), aes(x=management, y=mean,fill=provenance)) +
+  geom_bar(stat='identity', position=position_dodge()) +
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=0.2, position=position_dodge(0.9)) +
+  theme(legend.position=c(.2,.9), axis.text.x=element_text(size=24, color = "black"))+
+  ylab('Plant Species Richness\n') + xlab("") + expand_limits(y=30)+
+  scale_fill_manual(values=c("grey40", "grey"), labels=c("Introduced", "Native"))+
+  theme(axis.text.x=element_text(size=24, color = "black")) +
+  scale_x_discrete(labels = c("Bison", "Cattle"))+
+  annotate("text", x= 0.77, y = 11, label= "a", size = 7)+ #bison introduced
+  annotate("text", x= 1.23, y = 23, label= "b", size = 7)+ #bison native
+  annotate("text", x= 1.77, y = 10, label= "a", size = 7)+ #cattle introduced
+  annotate("text", x= 2.23, y = 28, label= "c", size = 7) #cattle native
+#export at 600x600
 
 
 #anova richness and provenance
-anovarichprov <- aov(richness~management*provenance, data = provmanagment)
+anovarichprov <- aov(richness~management*provenance, data = communityStructureprov)
+summary(anovarichprov)
+#                        Df Sum Sq Mean Sq F value   Pr(>F)    
+# management             1   48.4    48.4   4.324  0.04477 *  
+# provenance             1 1988.1  1988.1 177.597 1.73e-15 ***
+# management:provenance  1  129.6   129.6  11.577  0.00165 ** 
+# Residuals             36  403.0    11.2           
+
+anovaRichProvManageposthoc <- TukeyHSD(anovarichprov)
+#a for bison introduced, cattle introduced
+#b for bison native
+#c for cattle native
+
+
 
 
 #figure - evenness
