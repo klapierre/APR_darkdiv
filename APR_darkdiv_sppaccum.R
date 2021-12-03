@@ -192,7 +192,7 @@ ggplot(data=barGraphStats(data=communityStructureprov, variable="richness", byFa
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=0.2, position=position_dodge(0.9)) +
   theme(legend.position=c(.2,.9), axis.text.x=element_text(size=24, color = "black"))+
   ylab('Plant Species Richness\n') + xlab("") + expand_limits(y=30)+
-  scale_fill_manual(values=c("grey40", "grey"), labels=c("Introduced", "Native"))+
+  scale_fill_manual(values=c("grey40", "grey"), labels=c("Non-Native", "Native"))+
   theme(axis.text.x=element_text(size=24, color = "black")) +
   scale_x_discrete(labels = c("Bison", "Cattle"))+
   annotate("text", x= 0.77, y = 11, label= "a", size = 7)+ #bison introduced
@@ -261,8 +261,41 @@ BC_NMDS_Graph <- cbind(plotData,BC_NMDS)
 BC_Ord_Ellipses<-ordiellipse(sppBC, plotData$location, display = "sites",
                              kind = "se", conf = 0.95, label = T)               
 
+ord3 <- data.frame(plotData,scores(sppBC,display="sites"))%>%
+  group_by(location)
 
+BC_Ord_Ellipses<-ordiellipse(sppBC, plotData$location, display = "sites",
+                            kind = "se", conf = 0.95, label = T)
+#Make a new empty data frame called BC_Ellipses                
+BC_Ellipses <- data.frame()
+#Generate ellipses points
+for(g in levels(ord3$location)){
+  BC_Ellipses <- rbind(BC_Ellipses, cbind(as.data.frame(with(ord3[ord3$location==g,], 
+  veganCovEllipse(BC_Ord_Ellipses[[g]]$cov,BC_Ord_Ellipses[[g]]$center,BC_Ord_Ellipses[[g]]$scale)))
+  ,location=g))
+}
 
+#Make a data frame called BC_NMDS and at a column using the first set of "points" in BC_Data and a column using the second set of points.  Group them by watershed
+#BC_NMDS = data.frame(MDS1 = BC_Data$points[,1], MDS2 = BC_Data$points[,2],group=BC_Meta_Data$Watershed)
+
+ggplot(ord3, aes(x=NMDS1, y=NMDS2, col="Plot"))+
+  geom_point(aes(color=Plot),size=1)+
+  theme_minimal(base_size = 15)+
+  theme(legend.text = element_text(colour="black", size=18))
+
+##permanova data
+PermanovaData <- sppMatrix %>%
+  select(-APR_plot_id, -location)
+Permanova <- adonis2(formula = PermanovaData~ location, data = plotData, permutations = 999, method= "bray")
+print(Permanova)
+#F= 5.7566   DF = 1,19  P = .001
+
+#betadisper
+Veg <- vegdist(PermanovaData, method = "bray")
+Dispersion <- betadisper(Veg, plotData$location)
+permutest(Dispersion, pairwise = TRUE, permutations = 999) 
+
+#species accumulation
 
 
 test
