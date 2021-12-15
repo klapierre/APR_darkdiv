@@ -70,6 +70,13 @@ relCover <- spp10%>%
 
 
 
+#Histograms to check for outliers
+#Skewed to the right but no obvious outliers 
+#Alyssum desertorum oddly high? 
+hist(relCover$cover)
+hist(relCover$rel_cover)
+
+
 ###percent native
 provenance <- relCover%>%
   filter(provenance!='')%>% #filter out unknown species
@@ -297,6 +304,34 @@ permutest(Dispersion, pairwise = TRUE, permutations = 999)
 
 #species accumulation
 
+coversection <- spp%>%
+  mutate(plotIDsize = paste(APR_plot_id, plot_section, sep = "::"))
+
+plotsection <- coversection%>%
+  select(plotIDsize)%>%
+  unique()
+
+communitystructuresection<- community_structure(coversection, time.var=NULL, abundance.var='cover', replicate.var='plotIDsize')%>%
+  left_join(plotsection)%>%
+  separate(plotIDsize, c("APR_plot_id", "plot_section"), sep = "::")
+
+specaccum <- read.csv("DarkDivSpecAccum.csv")
+
+specaccummean <- ggplot(data=barGraphStats(data=specaccum, variable="richness", byFactorNames=c("plot_size", "management")), aes(x=plot_size, y=mean, fill = management, colour = management))+
+  geom_line(aes(linetype = management), size = 1.5) +
+  geom_point(size = 2, color = "black")+
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=0.2, position=position_dodge(0.9), color = "black")+
+  ylab('Average Species Richness\n')+ xlab(bquote('Plot Size'~(m^2)))+
+  theme(axis.title=element_text(size=24, color = "black"),legend.position=c(.2,.9))+
+  scale_colour_manual(values=c("grey40", "grey"))+
+  expand_limits(y= 35)
+
+theme(legend.position=c(.87,.9), axis.text.x=element_text(size=24, color = "black"))
+
+                                         
+
+
+specaccummean
 
 test
 
