@@ -84,6 +84,8 @@ provenance <- relCover%>%
   summarise(cover=sum(rel_cover))%>%
   ungroup()
 
+hist(provenance$cover)
+
 #figure - percent native cover
 ggplot(data=barGraphStats(data=provenance, variable="cover", byFactorNames=c("management", "provenance")), aes(x=management, y=mean, fill=provenance)) +
   geom_bar(stat='identity', position=position_dodge()) +
@@ -114,6 +116,8 @@ growthForm <- relCover%>%
   summarise(cover=sum(rel_cover))%>%
   ungroup()
 
+hist(sqrt(growthForm$cover))
+hist(growthForm$cover)
 
 #figure - percent native cover
 ggplot(data=barGraphStats(data=growthForm, variable="cover", byFactorNames=c("management", "growth_form")), aes(x=growth_form, y=mean, fill=management)) +
@@ -135,9 +139,11 @@ ggplot(data=barGraphStats(data=growthForm, variable="cover", byFactorNames=c("ma
   annotate("text", x= 4.23, y = 8, label= "c", size = 7) #succ cattle
 #export at 600x600
 
-anovafunctionalgroup <- aov(cover~management*growth_form, data = growthForm)
+anovafunctionalgroup <- aov(sqrt(cover)~management*growth_form, data = growthForm)
 summary(anovafunctionalgroup)
 #Growth form alone (P value = <.001, F(3, 71)= 79.732 and growth form's interaction with management (P value = 0.015, F(3, 71) = 3.731) are significant
+#sqrt more normal
+#sqrt growth form (P value = < 2e-16, F(3, 71) = 80.218 and growth form's interaction with management (P value = 0.00129, F(3, 71 = 5.825) are significant
 
 anovafunctionalgroupposthoc <- TukeyHSD(anovafunctionalgroup)
 #a for bison graminoid, cattle graminoid 
@@ -155,6 +161,9 @@ management <- relCover%>%
 
 communityStructure <- community_structure(relCover, time.var=NULL, abundance.var='rel_cover', replicate.var='APR_plot_id')%>%
   left_join(management)
+
+hist(communityStructure$richness)
+hist(communityStructure$Evar)
 
 #figure - richness
 ggplot(data=barGraphStats(data=communityStructure, variable="richness", byFactorNames=c("management")), aes(x=management, y=mean)) +
@@ -248,7 +257,7 @@ sppMatrix <- relCover%>%
   select(location, APR_plot_id, genus_species, rel_cover)%>%
   spread(key=genus_species, value=rel_cover, fill=0)
 
-sppBC <- metaMDS(sppMatrix[,3:85])
+sppBC <- metaMDS(sppMatrix[,3:87])
 
 plots <- 1:nrow(sppMatrix)
 plotData <- sppMatrix[,1:2]
@@ -276,19 +285,27 @@ BC_Ord_Ellipses<-ordiellipse(sppBC, plotData$location, display = "sites",
 #Make a new empty data frame called BC_Ellipses                
 BC_Ellipses <- data.frame()
 #Generate ellipses points
-for(g in levels(ord3$location)){
-  BC_Ellipses <- rbind(BC_Ellipses, cbind(as.data.frame(with(ord3[ord3$location==g,], 
+for(g in unique(BC_NMDS$group)){
+  BC_Ellipses <- rbind(BC_Ellipses, cbind(as.data.frame(with(BC_NMDS[BC_NMDS$group==g,], 
   veganCovEllipse(BC_Ord_Ellipses[[g]]$cov,BC_Ord_Ellipses[[g]]$center,BC_Ord_Ellipses[[g]]$scale)))
-  ,location=g))
+  ,group=g))
 }
+
+
 
 #Make a data frame called BC_NMDS and at a column using the first set of "points" in BC_Data and a column using the second set of points.  Group them by watershed
 #BC_NMDS = data.frame(MDS1 = BC_Data$points[,1], MDS2 = BC_Data$points[,2],group=BC_Meta_Data$Watershed)
 
-ggplot(ord3, aes(x=NMDS1, y=NMDS2, col="Plot"))+
-  geom_point(aes(color=Plot),size=1)+
-  theme_minimal(base_size = 15)+
-  theme(legend.text = element_text(colour="black", size=18))
+ggplot(BC_NMDS_Graph, aes(x=MDS1, y=MDS2, color=group,linetype = group, shape = group))+
+  geom_point(size=6)+ 
+  geom_path(data = BC_Ellipses, aes(x = NMDS1, y = NMDS2), size = 3)+
+  labs(color="", linetype = "", shape = "")+
+  scale_colour_manual(values=c("grey40", "grey"), labels = c("Bison", "Cattle"), name = "")+
+  scale_linetype_manual(values = c("twodash", "solid"), labels = c("Bison", "Cattle"), name = "")+
+  scale_shape_manual(values = c(15, 16),labels = c("Bison", "Cattle"), name = "")+
+  xlab("NMDS1")+ 
+  ylab("NMDS2")+ 
+  theme(axis.text.x=element_text(size=24, color = "black"), axis.text.y = element_text(size = 24, color = "black"), legend.text = element_text(size = 24))
 
 ##permanova data
 PermanovaData <- sppMatrix %>%
