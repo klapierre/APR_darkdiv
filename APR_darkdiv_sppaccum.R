@@ -1,7 +1,7 @@
 ################################################################################
 ##  APR_darkdiv_sppaccum.R: Species accumulation curves for Dark Diversity Network plots at APR.
 ##
-##  Author: Kimberly Komatsu
+##  Author: Kimberly Komatsu, Shelley Bennett, Sarah Alley, Elizabeth Blake, Kathryn Bloodworth, Rachael Brenneman, Alyssa Young
 ##  Date created: February 5, 2020
 ################################################################################
 
@@ -11,6 +11,7 @@
 
 library(codyn)
 library(vegan)
+library(grid)
 library(tidyverse)
 
 theme_set(theme_bw())
@@ -100,6 +101,35 @@ ggplot(data=barGraphStats(data=provenance, variable="cover", byFactorNames=c("ma
   annotate("text", x= 0.77, y = 68, label= "ab", size = 7)+
   annotate("text", x= 1.23, y = 60, label= "ab", size = 7)
 #export at 600x600
+
+
+# ###percent native by growth form
+# provenanceGrowthForm <- relCover%>%
+#   filter(provenance!='')%>% #filter out unknown species
+#   group_by(management, APR_plot_id, provenance, growth_form)%>%
+#   summarise(cover=sum(rel_cover))%>%
+#   ungroup()
+# 
+# #figure - percent native cover by growth form
+# ggplot(data=barGraphStats(data=provenanceGrowthForm, variable="cover", byFactorNames=c("management", "provenance", "growth_form")), aes(x=growth_form, y=mean, fill=provenance)) +
+#   geom_bar(stat='identity', position=position_dodge()) +
+#   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=0.2, position=position_dodge(0.9)) +
+#   # scale_fill_manual(values=c("grey40", "grey"), labels=c("Non-native", "Native")) +
+#   ylab('Relative Percent Cover\n')+ xlab(element_blank())+
+#   # expand_limits(y=80)+
+#   # theme(legend.position=c(0.21,.93), axis.text.x=element_text(size=24, color = "black"))+
+#   # scale_x_discrete(labels = c("Bison", "Cattle"))+
+#   # annotate("text", x= 2.23, y = 82, label= "a", size = 7)+ 
+#   # annotate("text", x= 1.77, y = 45, label= "b", size = 7)+
+#   # annotate("text", x= 0.77, y = 68, label= "ab", size = 7)+
+#   # annotate("text", x= 1.23, y = 60, label= "ab", size = 7) +
+#   facet_wrap(~management)
+# #export at 600x600
+# 
+# #anova for percent cover by provenance and growth form
+# anova1 <- aov(cover~management*provenance*growth_form, data = provenanceGrowthForm)
+# summary(anova1) #no three-way interaction so no need to pursue this
+
 
 #anova for percent cover
 anova1 <- aov(cover~management*provenance, data = provenance)
@@ -347,8 +377,37 @@ theme(legend.position=c(.87,.9), axis.text.x=element_text(size=24, color = "blac
 
                                          
 
+###rank abundance curves
+rankAbundance <- relCover%>%
+  group_by(location, provenance, growth_form, genus_species)%>%
+  summarize(avg_cover=mean(rel_cover))%>%
+  ungroup()%>%
+  filter(genus_species!='unknown:small_thin_leaf')%>%
+  mutate(provenance=ifelse(genus_species=='Penstemon_albicula', 'native', as.character(provenance)))%>%
+  arrange(location, -avg_cover)%>%
+  group_by(location)%>%
+  mutate(rank=seq_along(location))%>%
+  ungroup()
 
-specaccummean
+BLMrank <- ggplot(data=subset(rankAbundance, location=='BLM', avg_cover>0), aes(x=rank, y=avg_cover)) +
+  geom_line() +
+  geom_point(aes(colour=provenance, shape=growth_form), size=3) +
+  xlab('Species Rank') +
+  ylab('Relative Percent Cover') +
+  # scale_x_continuous(expand=c(0,0), limits=c(0.5,17), breaks=seq(0,17,5)) +
+  # scale_y_continuous(expand=c(0,0), limits=c(0,60), breaks=seq(0,60,10)) +
+  geom_text(aes(y=avg_cover+0.5, x=rank+0.1, label=genus_species), hjust='left', vjust='bottom', angle=25, size=5)
 
-test
+BDrank <- ggplot(data=subset(rankAbundance, location=='BD', avg_cover>0), aes(x=rank, y=avg_cover)) +
+  geom_line() +
+  geom_point(aes(colour=provenance, shape=growth_form), size=3) +
+  xlab('Species Rank') +
+  ylab('Relative Percent Cover') +
+  # scale_x_continuous(expand=c(0,0), limits=c(0.5,17), breaks=seq(0,17,5)) +
+  # scale_y_continuous(expand=c(0,0), limits=c(0,60), breaks=seq(0,60,10)) +
+  geom_text(aes(y=avg_cover+0.5, x=rank+0.1, label=genus_species), hjust='left', vjust='bottom', angle=25, size=5)
+
+pushViewport(viewport(layout=grid.layout(2,1)))
+print(BLMrank, vp=viewport(layout.pos.row = 1, layout.pos.col = 1))
+print(BDrank, vp=viewport(layout.pos.row = 2, layout.pos.col = 1))
 
