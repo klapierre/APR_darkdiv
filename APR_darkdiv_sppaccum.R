@@ -411,3 +411,19 @@ pushViewport(viewport(layout=grid.layout(2,1)))
 print(BLMrank, vp=viewport(layout.pos.row = 1, layout.pos.col = 1))
 print(BDrank, vp=viewport(layout.pos.row = 2, layout.pos.col = 1))
 
+
+
+###soil and precipitation data
+covar <- read.csv('Kim_covar.csv') #Shelley
+
+##all soil, elevation, slope, aspect, precip, temp into PCA, animal stuff separate
+##or everything into one big PCA
+##out of pca, see what % variation explained by first several axes. if 90% use first axes, or 50, 30 use 2 pca numbers
+## anovas for richness and evenness, do mixed model instead and include pca as random factor using lme4
+
+#summary(insectherbModel <- lme(sqrt(avg_perc_herbivory)~as.factor(species)*as.factor(ind_age)*as.factor(stand_age), #note how avg_perc_herbivory is square root transformed in this one
+                              # data=herbivoryData, 
+                               #random=~1|pca))
+
+
+
