@@ -14,6 +14,8 @@ library(vegan)
 library(grid)
 library(tidyverse)
 library(nlme)
+library(factoextra)
+library(ggfortify)
 
 theme_set(theme_bw())
 theme_update(axis.title.x=element_text(size=24, vjust=-0.35), axis.text.x=element_text(size=20, color = "black"),
@@ -440,10 +442,27 @@ RelCovAxes <- predict(RelCovPCA, newdata=covarRelCov)%>% #makes a new dataframe 
 ##out of pca, see what % variation explained by first several axes. if 90% use first axes, or 50, 30 use 2 pca numbers
 ## anovas for richness and evenness, do mixed model instead and include pca as random factor using lme4
 
-summary(APRModel <- lme(rel_cover~as.factor(management)*as.factor(provenance)*as.factor(growth_form), data=RelCovAxes, random=~1|PC1))
-                              #data=herbivoryData, 
-                              #random=~1|pca))
+summary(APRModel <- lme(rel_cover~as.factor(management)*as.factor(provenance),data=RelCovAxes, random=~1|PC1))
+                           
+var <- get_pca_var(RelCovPCA)
+var
+head(var$contrib,7)
 
+#PCA Graph
 
+g<-autoplot(RelCovPCA,data=covarRelCov,scale=0,
+            colour="Site",loadings=TRUE,loadings.colour="black",size=3,
+            loadings.label=TRUE,loadings.label.colour="black",loadings.label.size=6)
+
+arrow_ends <- layer_data(g, 2)[,c(2,4)]
+
+autoplot(RelCovPCA,data=covarRelCov,scale=0,
+         colour="management",loadings=TRUE,loadings.colour="black",size=3,
+         loadings.label=TRUE,loadings.label.colour="black",loadings.label.size=5,
+         loadings.label.vjust = 1.5,frame=T,frame.colour = 'management') +
+  geom_point(size = 2) + 
+  theme(plot.background=element_blank(),
+        panel.background=element_rect(fill='transparent',color='black',size=1),
+        legend.key=element_blank())
 
 
