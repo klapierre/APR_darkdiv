@@ -13,6 +13,7 @@ library(codyn)
 library(vegan)
 library(grid)
 library(tidyverse)
+library(nlme)
 
 theme_set(theme_bw())
 theme_update(axis.title.x=element_text(size=24, vjust=-0.35), axis.text.x=element_text(size=20, color = "black"),
@@ -414,16 +415,35 @@ print(BDrank, vp=viewport(layout.pos.row = 2, layout.pos.col = 1))
 
 
 ###soil and precipitation data
-covar <- read.csv('Kim_covar.csv') #Shelley
+covar <- read.csv('Kim_covar.csv') %>%
+  mutate(location = ifelse(Treatment == "Bison_d", "BD", "BLM")) %>%
+  mutate(APR_plot_id = paste(location,id,sep="_")) 
+
+covarRelCov <- relCover %>%
+  left_join(covar) %>%
+  filter(!is.na(elevation_)) %>%
+  select(APR_plot_id, growth_form, provenance, management, rel_cover, soil_wat_2, soil_san_2, soil_Cla_2, soil_bul_2, slope_WGS8, elevation_, aspect_WGS)
+
+#PCA
+RelCovPCA<- prcomp(covarRelCov[,6:12]) #prcomp is the function that does a PCA on plantWide dataframe, removing column 1 (which was the plot ids)
+                                               # PC1      PC2     PC3     PC4     PC5     PC6     PC7
+                        #Standard deviation     76.8056 15.94035 2.89597 2.09064 1.38459 0.84450 0.55555
+                        #Proportion of Variance  0.9563  0.04119 0.00136 0.00071 0.00031 0.00012 0.00005
+                        #Cumulative Proportion   0.9563  0.99746 0.99882 0.99952 0.99983 0.99995 1.00000
+RelCovAxes <- predict(RelCovPCA, newdata=covarRelCov)%>% #makes a new dataframe called plantAxes and puts together the plantPCA output with the plantWide dataframe
+  cbind(covarRelCov[,1:5])%>% #binds on the plot ids (column 1 of the plantWide dataframe)
+  select(APR_plot_id, growth_form, provenance, management, rel_cover, PC1, PC2) #keeps only the plot ids, and eigenvalues from the first two PC axes (could modify this to keep more axes too)
+
 
 ##all soil, elevation, slope, aspect, precip, temp into PCA, animal stuff separate
 ##or everything into one big PCA
 ##out of pca, see what % variation explained by first several axes. if 90% use first axes, or 50, 30 use 2 pca numbers
 ## anovas for richness and evenness, do mixed model instead and include pca as random factor using lme4
 
-#summary(insectherbModel <- lme(sqrt(avg_perc_herbivory)~as.factor(species)*as.factor(ind_age)*as.factor(stand_age), #note how avg_perc_herbivory is square root transformed in this one
-                              # data=herbivoryData, 
-                               #random=~1|pca))
+summary(APRModel <- lme(rel_cover~as.factor(management)*as.factor(provenance)*as.factor(growth_form), data=RelCovAxes, random=~1|PC1))
+                              #data=herbivoryData, 
+                              #random=~1|pca))
+
 
 
 
