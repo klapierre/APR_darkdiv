@@ -416,6 +416,8 @@ print(BDrank, vp=viewport(layout.pos.row = 2, layout.pos.col = 1))
 
 
 
+
+
 ###soil and precipitation data
 covar <- read.csv('Kim_covar.csv') %>%
   mutate(location = ifelse(Treatment == "Bison_d", "BD", "BLM")) %>%
@@ -466,3 +468,38 @@ autoplot(RelCovPCA,data=covarRelCov,scale=0,
         legend.key=element_blank())
 
 
+###soil and precip 2 with all data
+covar2 <- read.csv('Kim_covar03312022.csv') %>%
+  mutate(location = ifelse(Treatment == "Bison_d", "BD", "BLM")) %>%
+  mutate(APR_plot_id = paste(location,id,sep="_")) 
+
+covarRelCov2 <- relCover %>%
+  left_join(covar2) %>%
+  filter(!is.na(elevation_)) %>%
+  select(APR_plot_id, growth_form, provenance, management, rel_cover, soil_wat_2, soil_san_2, soil_Cla_2, soil_bul_2, slope_WGS8, elevation_, aspect_WGS, prcp_reduc, distwaterS, distwaterP)
+
+RelCovPCA2<- prcomp(covarRelCov2[,6:15])
+
+RelCovAxes2 <- predict(RelCovPCA2, newdata=covarRelCov2)%>% #makes a new dataframe called plantAxes and puts together the plantPCA output with the plantWide dataframe
+  cbind(covarRelCov[,1:5])%>% #binds on the plot ids (column 1 of the plantWide dataframe)
+  select(APR_plot_id, growth_form, provenance, management, rel_cover, PC1, PC2)
+
+g2<-autoplot(RelCovPCA2,data=covarRelCov2,scale=0,
+            colour="management",loadings=TRUE,loadings.colour="black",size=3,
+            loadings.label=TRUE,loadings.label.colour="black",loadings.label.size=6)
+
+arrow_ends <- layer_data(g2, 2)[,c(2,4)]
+
+autoplot(RelCovPCA2,data=covarRelCov2,scale=0,
+         colour="management",loadings=TRUE,loadings.colour="black",size=3,
+         loadings.label=TRUE,loadings.label.colour="black",loadings.label.size=5,
+         loadings.label.vjust = 1.5,frame=T,frame.colour = 'management') +
+  geom_point(size = 2) + 
+  theme(plot.background=element_blank(),
+        panel.background=element_rect(fill='transparent',color='black',size=1),
+        legend.key=element_blank())
+
+#standardize values for envt conditions, make into z scores
+#RDA or CCA
+#change previous graphs to BLM, Sun Prairie
+#describing plant communities in two sites - apply to other northern mixed grass prairies, conservation/restoration using certain species
