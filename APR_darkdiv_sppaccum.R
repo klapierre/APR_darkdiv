@@ -421,12 +421,13 @@ print(BDrank, vp=viewport(layout.pos.row = 2, layout.pos.col = 1))
 ###soil and precipitation data
 covar <- read.csv('Kim_covar.csv') %>%
   mutate(location = ifelse(Treatment == "Bison_d", "BD", "BLM")) %>%
-  mutate(APR_plot_id = paste(location,id,sep="_")) 
+  mutate(APR_plot_id = paste(location,id,sep="_"))
 
 covarRelCov <- relCover %>%
   left_join(covar) %>%
   filter(!is.na(elevation_)) %>%
   select(APR_plot_id, growth_form, provenance, management, rel_cover, soil_wat_2, soil_san_2, soil_Cla_2, soil_bul_2, slope_WGS8, elevation_, aspect_WGS)
+
 
 #PCA
 RelCovPCA<- prcomp(covarRelCov[,6:12]) #prcomp is the function that does a PCA on plantWide dataframe, removing column 1 (which was the plot ids)
@@ -478,6 +479,46 @@ covarRelCov2 <- relCover %>%
   filter(!is.na(elevation_)) %>%
   select(APR_plot_id, growth_form, provenance, management, rel_cover, soil_wat_2, soil_san_2, soil_Cla_2, soil_bul_2, slope_WGS8, elevation_, aspect_WGS, prcp_reduc, distwaterS, distwaterP)
 
+#standardize covariates into z-scores
+covarRelCov2standard <- covarRelCov2 %>%
+  mutate(soilwat2_stand = (soil_wat_2 - mean(soil_wat_2, na.rm = TRUE)) / sd(soil_wat_2, na.rm = TRUE)) %>%
+  mutate(soilsan2_stand = (soil_san_2 - mean(soil_san_2, na.rm = TRUE)) / sd(soil_san_2, na.rm = TRUE)) %>%
+  mutate(soilCla2_stand = (soil_Cla_2 - mean(soil_Cla_2, na.rm = TRUE)) / sd(soil_Cla_2, na.rm = TRUE)) %>%
+  mutate(soilbul2_stand = (soil_bul_2 - mean(soil_bul_2, na.rm = TRUE)) / sd(soil_bul_2, na.rm = TRUE)) %>%
+  mutate(slope_stand = (slope_WGS8 - mean(slope_WGS8, na.rm = TRUE)) / sd(slope_WGS8, na.rm = TRUE))  %>%
+  mutate(elevation_stand = (elevation_ - mean(elevation_, na.rm = TRUE)) / sd(elevation_, na.rm = TRUE)) %>%
+  mutate(aspect_stand = (aspect_WGS - mean(aspect_WGS, na.rm = TRUE)) / sd(aspect_WGS, na.rm = TRUE)) %>%
+  mutate(prcp_stand = (prcp_reduc - mean(prcp_reduc, na.rm = TRUE)) / sd(prcp_reduc, na.rm = TRUE)) %>%
+  mutate(distwaterS_stand = (distwaterS - mean(distwaterS, na.rm = TRUE)) / sd(distwaterS, na.rm = TRUE)) %>%
+  mutate(distwaterP_stand = (distwaterP - mean(distwaterP, na.rm = TRUE)) / sd(distwaterP, na.rm = TRUE))
+ 
+RelCov2StandardPCA <- prcomp(covarRelCov2standard[,16:25])
+RelCov2StandardAxes <- predict(RelCov2StandardPCA, newdata=covarRelCov2standard)%>% #makes a new dataframe called plantAxes and puts together the plantPCA output with the plantWide dataframe
+  cbind(covarRelCov2standard[,1:5])%>% #binds on the plot ids (column 1 of the plantWide dataframe)
+  select(APR_plot_id, growth_form, provenance, management, rel_cover, PC1, PC2, PC3)
+
+g3<-autoplot(RelCov2StandardPCA,data=covarRelCov2standard,scale=0,
+             colour="management",loadings=TRUE,loadings.colour="black",size=3,
+             loadings.label=TRUE,loadings.label.colour="black",loadings.label.size=6)
+
+arrow_ends <- layer_data(g3, 3)[,c(2,4)]
+
+autoplot(RelCov2StandardPCA,data=covarRelCov2standard,scale=0,
+         colour="management",loadings=TRUE,loadings.colour="black",size=3,
+         loadings.label=TRUE,loadings.label.colour="black",loadings.label.size=5,
+         loadings.label.vjust = 1.5,frame=T,frame.colour = 'management') +
+  geom_point(size = 2) + 
+  theme(plot.background=element_blank(),
+        panel.background=element_rect(fill='transparent',color='black',size=1),
+        legend.key=element_blank())
+
+##ask Alyssa
+
+
+
+
+
+
 RelCovPCA2<- prcomp(covarRelCov2[,6:15])
 
 RelCovAxes2 <- predict(RelCovPCA2, newdata=covarRelCov2)%>% #makes a new dataframe called plantAxes and puts together the plantPCA output with the plantWide dataframe
@@ -500,6 +541,6 @@ autoplot(RelCovPCA2,data=covarRelCov2,scale=0,
         legend.key=element_blank())
 
 #standardize values for envt conditions, make into z scores
-#RDA or CCA
+#RDA or CCA, layers on plant community, which environmental variables are driving different plant communities
 #change previous graphs to BLM, Sun Prairie
 #describing plant communities in two sites - apply to other northern mixed grass prairies, conservation/restoration using certain species
