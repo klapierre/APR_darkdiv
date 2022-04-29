@@ -514,6 +514,20 @@ autoplot(RelCov2StandardPCA,data=covarRelCov2standard,scale=0,
 
 ##ask Alyssa
 
+##RDA
+relCoverspp <- relCover %>%
+  select(genus_species, rel_cover)
+
+relCoverspp$rel_cover <- log1p(relCoverspp$rel_cover)
+relCoverspp$rel_cover <- decostand(relCoverspp$rel_cover, 'hell') ## doesnt work, converts all to 1
+
+#relCoverLog <- log1p(covarRelCov2standard$rel_cover)
+
+#spe.hell <- decostand (relCoverLog, 'hell')
+
+#tbRDA <- rda (relCoverLog ~ soilwat2_stand + soilsan2_stand + soilCla2_stand + soilbul2_stand + slope_stand + elevation_stand + aspect_stand + prcp_stand + distwaterS_stand + distwaterP_stand, data = relCoverlog)
+
+
 
 
 
