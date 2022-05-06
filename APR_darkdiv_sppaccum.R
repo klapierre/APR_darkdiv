@@ -81,6 +81,9 @@ relCover2 <-relCover %>%
   
 relCover2$sppName <- spCodes(relCover2$sppName, nchar.gen = 2, nchar.sp = 2, nchar.ssp = 0, sep.species = " ", sep.spcode = "", verbosity = 2)
 
+relCover3 <-relCover %>%
+  separate(genus_species, c("genus", "species"), sep = "_")%>%
+  mutate(sppName = paste(genus,species,sep=" "))
 
 #Histograms to check for outliers
 #Skewed to the right but no obvious outliers 
@@ -102,11 +105,11 @@ hist(provenance$cover)
 ggplot(data=barGraphStats(data=provenance, variable="cover", byFactorNames=c("management", "provenance")), aes(x=management, y=mean, fill=provenance)) +
   geom_bar(stat='identity', position=position_dodge()) +
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=0.2, position=position_dodge(0.9)) +
-  scale_fill_manual(values=c("grey40", "grey"), labels=c("Non-native", "Native")) +
+  scale_fill_manual(values=c("grey", "grey40"), labels=c("Non-native", "Native")) +
   ylab('Relative Percent Cover\n')+ xlab(element_blank())+
   expand_limits(y=80)+
   theme(legend.position=c(0.21,.93), axis.text.x=element_text(size=24, color = "black"))+
-  scale_x_discrete(labels = c("Bison", "Cattle"))+
+  scale_x_discrete(labels = c("Sun Prairie", "BLM"))+
   annotate("text", x= 2.23, y = 82, label= "a", size = 7)+ 
   annotate("text", x= 1.77, y = 45, label= "b", size = 7)+
   annotate("text", x= 0.77, y = 68, label= "ab", size = 7)+
@@ -165,10 +168,10 @@ ggplot(data=barGraphStats(data=growthForm, variable="cover", byFactorNames=c("ma
   geom_bar(stat='identity', position=position_dodge()) +
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=0.2, position=position_dodge(0.9)) +
   ylab('Relative Percent Cover\n') + xlab("")+
-  scale_fill_manual(values=c("grey40", "grey"), labels=c("Bison", "Cattle"))+
+  scale_fill_manual(values=c("grey40", "grey"), labels=c("Sun Prairie", "BLM"))+
   theme(axis.text.x=element_text(angle=45, hjust=1))+
   scale_x_discrete(limits = c("graminoid", "forb", "woody", "succulent"),breaks= c("graminoid", "forb", "woody", "succulent"),labels = c("Graminoid", "Forb", "Woody", "Succulent"))+
-  theme(legend.position=c(.87,.9), axis.text.x=element_text(size=24, color = "black"))+
+  theme(legend.position=c(.82,.9), axis.text.x=element_text(size=24, color = "black"))+
   expand_limits(y=80) +
   annotate("text", x= .77, y = 73, label= "a", size = 7)+ #gram bison
   annotate("text", x= 1.23, y = 75, label= "a", size = 7)+ #gram cattle
@@ -249,9 +252,9 @@ ggplot(data=barGraphStats(data=communityStructureprov, variable="richness", byFa
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=0.2, position=position_dodge(0.9)) +
   theme(legend.position=c(.2,.9), axis.text.x=element_text(size=24, color = "black"))+
   ylab('Plant Species Richness\n') + xlab("") + expand_limits(y=30)+
-  scale_fill_manual(values=c("grey40", "grey"), labels=c("Non-Native", "Native"))+
+  scale_fill_manual(values=c("grey", "grey40"), labels=c("Non-native", "Native"))+
   theme(axis.text.x=element_text(size=24, color = "black")) +
-  scale_x_discrete(labels = c("Bison", "Cattle"))+
+  theme(axis.text.x=element_text(angle=45, hjust=1))+
   annotate("text", x= 0.77, y = 11, label= "a", size = 7)+ #bison introduced
   annotate("text", x= 1.23, y = 23, label= "b", size = 7)+ #bison native
   annotate("text", x= 1.77, y = 10, label= "a", size = 7)+ #cattle introduced
@@ -281,8 +284,9 @@ ggplot(data=barGraphStats(data=communityStructure, variable="Evar", byFactorName
   geom_bar(stat='identity', position=position_dodge()) +
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=0.2, position=position_dodge(0.9)) +
   ylab('Plant Species Evenness\n') + xlab('') +  theme(axis.text.x=element_text(size=24, color = "black")) + expand_limits(y=.085) +
-  scale_x_discrete(labels = c("Bison", "Cattle"))
+  scale_x_discrete(labels = c("Sun\nPrairie", "BLM"))
 #export at 400x600
+
 
 
 #T-test for eveness 
@@ -375,26 +379,26 @@ communitystructuresection<- community_structure(coversection, time.var=NULL, abu
 
 specaccum <- read.csv("DarkDivSpecAccum.csv")
 
-specaccummean <- ggplot(data=barGraphStats(data=specaccum, variable="richness", byFactorNames=c("plot_size", "management")), aes(x=plot_size, y=mean, fill = management, colour = management))+
+ggplot(data=barGraphStats(data=specaccum, variable="richness", byFactorNames=c("plot_size", "management")), aes(x=plot_size, y=mean, fill = management, colour = management))+
   geom_line(aes(linetype = management), size = 1.5) +
   geom_point(size = 2, color = "black")+
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=0.2, position=position_dodge(0.9), color = "black")+
   ylab('Average Species Richness\n')+ xlab(bquote('Plot Size'~(m^2)))+
   theme(axis.title=element_text(size=24, color = "black"),legend.position=c(.2,.9))+
-  scale_colour_manual(values=c("grey40", "grey"))+
+  scale_colour_manual(values=c("grey", "grey40"), labels=c("BLM", "Sun Prairie"))+
   expand_limits(y= 35)
 
-theme(legend.position=c(.87,.9), axis.text.x=element_text(size=24, color = "black"))
+
 
                                          
 
 ###rank abundance curves
-rankAbundance <- relCover%>%
-  group_by(location, provenance, growth_form, genus_species)%>%
+rankAbundance <- relCover3%>%
+  group_by(location, provenance, growth_form, sppName)%>%
   summarize(avg_cover=mean(rel_cover))%>%
   ungroup()%>%
-  filter(genus_species!='unknown:small_thin_leaf')%>%
-  mutate(provenance=ifelse(genus_species=='Penstemon_albicula', 'native', as.character(provenance)))%>%
+  filter(sppName!='unknown:small thin')%>%
+  mutate(provenance=ifelse(sppName=='Penstemon albicula', 'native', as.character(provenance)))%>%
   arrange(location, -avg_cover)%>%
   group_by(location)%>%
   mutate(rank=seq_along(location))%>%
@@ -403,21 +407,28 @@ rankAbundance <- relCover%>%
 BLMrank <- ggplot(data=subset(rankAbundance, location=='BLM', avg_cover>0), aes(x=rank, y=avg_cover)) +
   geom_line() +
   geom_point(aes(colour=provenance, shape=growth_form), size=3) +
-  xlab('Species Rank') +
-  ylab('Relative Percent Cover') +
+  scale_color_manual(values=c("grey50", "grey20"), labels=c("Non-native", "Native"))+
+  scale_shape_discrete(labels=c("Forb","Graminoid", "Succulent", "Woody"),name="Growth Form")+
+  xlab('') +
+  ylab('BLM\nRelative Percent Cover\n') +
   # scale_x_continuous(expand=c(0,0), limits=c(0.5,17), breaks=seq(0,17,5)) +
   # scale_y_continuous(expand=c(0,0), limits=c(0,60), breaks=seq(0,60,10)) +
-  geom_text(aes(y=avg_cover+0.5, x=rank+0.1, label=genus_species), hjust='left', vjust='bottom', angle=25, size=5)
+  geom_text(aes(y=avg_cover+1.2, x=rank+0.1, label=sppName), hjust='left', vjust='center', angle=90, size=4)+
+  expand_limits(y=40)
+BLMrank
 
 BDrank <- ggplot(data=subset(rankAbundance, location=='BD', avg_cover>0), aes(x=rank, y=avg_cover)) +
   geom_line() +
   geom_point(aes(colour=provenance, shape=growth_form), size=3) +
+  scale_color_manual(values=c("grey50", "grey20"), labels=c("Non-native", "Native"))+
+  scale_shape_discrete(labels=c("Forb","Graminoid", "Succulent", "Woody"),name="Growth Form")+
   xlab('Species Rank') +
-  ylab('Relative Percent Cover') +
+  ylab('Sun Prairie\nRelative Percent Cover\n') +
   # scale_x_continuous(expand=c(0,0), limits=c(0.5,17), breaks=seq(0,17,5)) +
   # scale_y_continuous(expand=c(0,0), limits=c(0,60), breaks=seq(0,60,10)) +
-  geom_text(aes(y=avg_cover+0.5, x=rank+0.1, label=genus_species), hjust='left', vjust='bottom', angle=25, size=5)
-
+  geom_text(aes(y=avg_cover+1.5, x=rank+0.1, label=sppName), hjust='left', vjust='center', angle=90, size=4)+
+  expand_limits(y=50)
+BDrank
 pushViewport(viewport(layout=grid.layout(2,1)))
 print(BLMrank, vp=viewport(layout.pos.row = 1, layout.pos.col = 1))
 print(BDrank, vp=viewport(layout.pos.row = 2, layout.pos.col = 1))
@@ -573,19 +584,19 @@ envRDA <- covar2 %>%
   mutate(Soil.Water = (soil_wat_2 - mean(soil_wat_2, na.rm = TRUE)) / sd(soil_wat_2, na.rm = TRUE)) %>%
   mutate(Sand = (soil_san_2 - mean(soil_san_2, na.rm = TRUE)) / sd(soil_san_2, na.rm = TRUE)) %>%
   mutate(Clay = (soil_Cla_2 - mean(soil_Cla_2, na.rm = TRUE)) / sd(soil_Cla_2, na.rm = TRUE)) %>%
-  mutate(BD = (soil_bul_2 - mean(soil_bul_2, na.rm = TRUE)) / sd(soil_bul_2, na.rm = TRUE)) %>%
+  mutate(Bulk.Density = (soil_bul_2 - mean(soil_bul_2, na.rm = TRUE)) / sd(soil_bul_2, na.rm = TRUE)) %>%
   mutate(Slope = (slope_WGS8 - mean(slope_WGS8, na.rm = TRUE)) / sd(slope_WGS8, na.rm = TRUE))  %>%
-  mutate(Elevation = (elevation_ - mean(elevation_, na.rm = TRUE)) / sd(elevation_, na.rm = TRUE)) %>%
+  mutate(Elev. = (elevation_ - mean(elevation_, na.rm = TRUE)) / sd(elevation_, na.rm = TRUE)) %>%
   mutate(Aspect = (aspect_WGS - mean(aspect_WGS, na.rm = TRUE)) / sd(aspect_WGS, na.rm = TRUE)) %>%
-  mutate(Precipitation = (prcp_reduc - mean(prcp_reduc, na.rm = TRUE)) / sd(prcp_reduc, na.rm = TRUE)) %>%
+  mutate(Precip. = (prcp_reduc - mean(prcp_reduc, na.rm = TRUE)) / sd(prcp_reduc, na.rm = TRUE)) %>%
   mutate(Dist.Water = (distwaterP - mean(distwaterP, na.rm = TRUE)) / sd(distwaterP, na.rm = TRUE))
 
 env <- envRDA %>%
-  select(plot, location, Soil.Water, Sand, Clay , BD, Slope, Elevation, Aspect, Precipitation, Dist.Water)
+  select(plot, location, Soil.Water, Sand, Clay , Bulk.Density, Slope, Elev., Aspect, Precip., Dist.Water)
 
 #run the tbRDA
 
-tbRDA <- rda(spe.hell ~ Soil.Water + Sand + Clay + BD + Slope + Elevation + Aspect + Precipitation + Dist.Water, data = env)
+tbRDA <- rda(spe.hell ~ Soil.Water + Sand + Clay + Bulk.Density + Slope + Elev. + Aspect + Precip. + Dist.Water, data = env)
 tbRDA
 summary(tbRDA)
 
@@ -785,14 +796,73 @@ summary(tbRDA)
 #plot rda 1 vs rda 2 with species labels
 library(ggord)
 
-ggord(tbRDA, env$location, poly = FALSE, ptslab = TRUE, addcol = "grey10", grp_title = "Site") +
+ggord(tbRDA, env$location, poly = FALSE, ptslab = TRUE, size = 3,veclsz = 0.4, arrow = 0.3, addcol = "grey10", grp_title = "Site", repel = TRUE, alpha = 2) +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
   scale_linetype_manual(values = c('solid', 'solid'))+
   labs(color="", linetype = "", shape = "")+
   scale_colour_manual(values=c("grey60", "grey80"), labels = c("BLM", "Sun Prairie"), name = "")+
   scale_linetype_manual(values = c("twodash", "solid"), labels = c("BLM", "Sun Prairie"), name = "")+
-  scale_shape_manual(values = c(15, 16),labels = c("BLM", "Sun Prairie"), name = "")
-  #coord_cartesian(xlim=c(-1.05,1.05))
+  scale_shape_manual(values = c(17, 16),labels = c("BLM", "Sun Prairie"), name = "")
+  #coord_cartesian(xlim=c(-1.1,1.2), ylim=c(-1.1,1.2))
+
+
+##final graph
+ggord(tbRDA, env$location, poly = FALSE, ptslab = TRUE, size = 4,veclsz = 0.4, arrow = 0.3, addcol = "grey10",addsize = 2.5, grp_title = "Site", repel = TRUE, alpha =2, ext = 1.3) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  scale_linetype_manual(values = c('solid', 'solid'))+
+  labs(color="", linetype = "", shape = "")+
+  scale_colour_manual(values=c("grey60", "grey80"), labels = c("BLM", "Sun Prairie"), name = "")+
+  scale_shape_manual(values = c(17, 16),labels = c("BLM", "Sun Prairie"), name = "")+
+  theme_update(axis.title.x=element_text(size=20, vjust=-0.35), axis.text.x=element_text(size=16, color = "black"),
+               axis.title.y=element_text(size=20, angle=90, vjust=0.7), axis.text.y=element_text(size=16, color= "black"),
+               panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+               legend.title=element_blank(), legend.text=element_text(size=18), panel.border=element_rect(color="black", fill = NA, size = 1))
+
+#poly=FALSE no polygon fill
+#ptslab=TRUE add species names to points
+#size env variables point size
+#repel=TRUE puts labels inside plot
+#ext distance from env variable label to arrow
+#addsize = the size of species labels
+#addcol = color of species labels
+# grp_in = NULL,
+# cols = NULL,
+# facet = FALSE,
+# nfac = NULL,
+# addpts = NULL,
+# obslab = FALSE,
+# ptslab = FALSE,
+# ellipse = TRUE,
+# ellipse_pro = 0.95,
+# poly = TRUE,
+# polylntyp = "solid",
+# hull = FALSE,
+# arrow = 0.4,
+# labcol = "black",
+# veccol = "black",
+# vectyp = "solid",
+# veclsz = 0.5,
+# ext = 1.2,
+# repel = FALSE,
+# vec_ext = 1,
+# vec_lab = NULL,
+# size = 4,
+# sizelab = NULL,
+# addsize = size/2,
+# addcol = "blue",
+# addpch = 19,
+# txt = 4,
+# alpha = 1,
+# alpha_el = 0.4,
+# xlims = NULL,
+# ylims = NULL,
+# var_sub = NULL,
+# coord_fix = TRUE,
+# parse = TRUE,
+# grp_title = "Groups",
+# force = 1,
+# max.overlaps = 10,
+# exp = c(0, 0)
 
 
 #check how much each rda/pca explains
